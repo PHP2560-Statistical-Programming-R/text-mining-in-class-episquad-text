@@ -35,10 +35,14 @@ devtools::install_github("bradleyboehmke/harrypotter")
 Analyze the text for sentiment OR topic. **You do not need to do both**. The datacamp courses and [Tidy Text Mining with R](http://tidytextmining.com/) are good starting points for templates to perform this type of analysis, but feel free to *expand beyond these examples*.
 
 ```{r}
-library(RTextTools)
+library(gutenbergr)
 library(dplyr)
-data("NYTimes", package="RTextTools")
-colnames(NYTimes)
+gutenberg_metadata
+data("gutenbergr", package="gutenbergr")
+
+dt<-gutenberg_works(author == "Tagore, Rabindranath")
+
+gitanjali <- gutenberg_download(7164)
 
 ````
 
