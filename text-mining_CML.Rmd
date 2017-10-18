@@ -57,7 +57,7 @@ picture.clean<- picture %>%  mutate(linenumber = row_number(), chapter = cumsum(
 ```
 
 ```{r}
-positve.words <-picture.clean %>% inner_join(get_sentiments("nrc")) %>% filter(sentiment=="positive") %>% group_by(chapter) %>% top_n(10, word)
+positve.words <-picture.clean %>% inner_join(get_sentiments("nrc")) %>% filter(sentiment=="positive") %>% group_by(chapter) %>% top_n(3, word)
 
 ```
 
