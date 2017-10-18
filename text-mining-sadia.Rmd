@@ -53,7 +53,7 @@ alice_tidy<- alice %>%
 
 #Questions to answer: 1. How does the proportion of negative and positive sentiments changes throughout the chapters? 2. what is the total proportion of positive and negative sentiments 3. top 10 positive and negative words
 
-````
+```
 
 ```{r}
 #joining with the sentiment
@@ -77,7 +77,7 @@ alice_tidy_total %>% count(chapter) %>% arrange(desc(n))
 
 #graph to show the distribution of positive and negative words by each chapter
 alice_tidy_bing %>% group_by(chapter) %>% count(chapter, sentiment) %>% rename(total_words=n) %>%
-#Pyramid plot of each chapter by positive and negative words:
+#Pyramid plot of each chapter by positive and negative words (word frequency by each chapter):
   ggplot(aes(x = as.factor(chapter), fill = sentiment)) + 
   geom_bar(data=filter(alice_tidy_bing, sentiment == "positive")) + 
   geom_bar(data=filter(alice_tidy_bing, sentiment == "negative"),aes(y=..count..*(-1))) + 
