@@ -37,14 +37,54 @@ Analyze the text for sentiment OR topic. **You do not need to do both**. The dat
 ```{r}
 library(gutenbergr)
 library(dplyr)
+library(tidytext)
+library(stringr)
 gutenberg_metadata
 data("gutenbergr", package="gutenbergr")
 
-dt<-gutenberg_works(author == "Tagore, Rabindranath")
+dt<-gutenberg_works(author == "Carroll, Lewis") #df that contains the books by authors
 
-gitanjali <- gutenberg_download(7164)
+alice <- gutenberg_download(751) #download the books by book id in a dataframe
+
+## cleaning the data:
+alice_tidy<- alice %>%  
+            mutate(linenumber = row_number(), chapter = cumsum(str_detect(text, regex("chapter|CHAPTER [\\divxlc]", ignore_case = TRUE)))) %>% 
+  filter(chapter >0) %>% unnest_tokens(word, text)
+
+#How does the proportion of negative and positive sentiments changes throughout the chapters?
+#what is the total proportion of positive and negative sentiments
+#top 10 positive and negative words
 
 ````
+
+```{r}
+#joining with the sentiment
+alice_total<-alice_tidy %>% group_by(chapter) %>% count() %>% rename(total_words=n) #counting the total number of words in each chapter
+alice_tidy_total<-alice_tidy %>% left_join(alice_total, by="chapter") #joining the count column with the alice_tidy data
+alice_tidy_bing<-alice_tidy_total %>% inner_join(get_sentiments("bing")) #joining the sentiment with the tidy data with total column
+
+#what are the top 10 positive and negative words?
+positive_10<-alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) %>% filter(sentiment == "positive") %>% top_n(10)
+negative_10<-alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) %>% filter(sentiment == "negative") %>% top_n(10)
+
+ 
+#What percent of positive words each chapters have?
+alice_tidy_positive<-alice_tidy_bing %>% 
+   count(chapter, sentiment, total_words) %>% #counts total positive and negative words in each chapter and keeps the total_words column (otherwise it wont be there)
+   mutate(percent=n/total_words) %>%
+   filter(sentiment == "positive") %>%
+  arrange(desc(percent)) # the most positive chapters were 13, 1, 10, 2, 11. So, may be the book started in a positive way and have a happy ending
+
+#What percent of negative words each chapters have?
+alice_tidy_negative<-alice_tidy_bing %>% 
+   count(chapter, sentiment, total_words) %>% #counts total positive and negative words in each chapter and keeps the total_words column (otherwise it wont be there)
+   mutate(percent=n/total_words) %>%
+   filter(sentiment == "negative") %>%
+  arrange(desc(percent)) # the most negative chapters were 8,5,2,12,1. There might be something problem happening in the middle of the book. chapter 1 and 2 looks like to have high percent of positive and negative sentiments. Chapter 13 have the lowest percent of negative words indicating a happy ending
+
+
+```
+
 
 # Timelines and Task
 
