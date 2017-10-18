@@ -52,9 +52,7 @@ gitanjali <- gutenberg_download(7164)
 #Data Cleaning of picture
 library(tidytext)
 library(stringr)
-picture.chapter<- picture %>%  mutate(linenumber = row_number(),
-         chapter = cumsum(str_detect(text, regex("chapter [\\divxlc]",
-                                                 ignore_case = TRUE))))
+picture.chapter<- picture %>%  mutate(linenumber = row_number(), chapter = cumsum(str_detect(text, regex("chapter [\\divxlc]", ignore_case = TRUE)))) %>% filter(chapter >0)
 
 ```
 
