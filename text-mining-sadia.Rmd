@@ -51,9 +51,7 @@ alice_tidy<- alice %>%
             mutate(linenumber = row_number(), chapter = cumsum(str_detect(text, regex("chapter|CHAPTER [\\divxlc]", ignore_case = TRUE)))) %>% 
   filter(chapter >0) %>% unnest_tokens(word, text)
 
-#How does the proportion of negative and positive sentiments changes throughout the chapters?
-#what is the total proportion of positive and negative sentiments
-#top 10 positive and negative words
+#Questions to answer: 1. How does the proportion of negative and positive sentiments changes throughout the chapters? 2. what is the total proportion of positive and negative sentiments 3. top 10 positive and negative words
 
 ````
 
@@ -67,7 +65,29 @@ alice_tidy_bing<-alice_tidy_total %>% inner_join(get_sentiments("bing")) #joinin
 positive_10<-alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) %>% filter(sentiment == "positive") %>% top_n(10)
 negative_10<-alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) %>% filter(sentiment == "negative") %>% top_n(10)
 
- 
+
+
+#Total length of each chapter:
+alice_tidy_bing %>% count(chapter) %>% arrange(desc(n)) #chapter 13 has much fewer words than other chapters 
+alice_tidy_total %>% count(chapter) %>% arrange(desc(n))
+
+```
+
+```{r}
+
+#graph to show the distribution of positive and negative words by each chapter
+alice_tidy_bing %>% group_by(chapter) %>% count(chapter, sentiment) %>% rename(total_words=n) %>%
+#Pyramid plot of each chapter by positive and negative words:
+  ggplot(aes(x = as.factor(chapter), fill = sentiment)) + 
+  geom_bar(data=filter(alice_tidy_bing, sentiment == "positive")) + 
+  geom_bar(data=filter(alice_tidy_bing, sentiment == "negative"),aes(y=..count..*(-1))) + 
+  scale_y_continuous(breaks=seq(-350,350,50),labels=abs(seq(-350,350,50))) + 
+  coord_flip()
+
+```
+
+
+```{r} 
 #What percent of positive words each chapters have?
 alice_tidy_positive<-alice_tidy_bing %>% 
    count(chapter, sentiment, total_words) %>% #counts total positive and negative words in each chapter and keeps the total_words column (otherwise it wont be there)
@@ -85,6 +105,31 @@ alice_tidy_negative<-alice_tidy_bing %>%
 
 ```
 
+```{r}
+#ggplot of sentiments throughout the chapter
+library(ggplot2)
+alice_tidy_bing %>% 
+    # Filter for positive and negative words
+    filter(sentiment %in% c("positive", "negative")) %>%
+    # Count by date, sentiment, and total_words
+    count(chapter, sentiment, total_words) %>%
+    ungroup() %>%
+    mutate(percent = n / total_words) %>%
+    # Set up the plot with aes()
+    ggplot(aes(chapter, percent, color=sentiment)) +
+    geom_line(size = 1.5) +
+    geom_smooth(method = "lm", se = FALSE, lty = 2) +
+    expand_limits(y = 0)
+# it looks like positive words had an abrupt increase at the end of the story. 
+
+```
+
+
+```{r}
+#To do: make function to repeat with the different lexicons: nrc, afinn
+
+
+```
 
 # Timelines and Task
 
