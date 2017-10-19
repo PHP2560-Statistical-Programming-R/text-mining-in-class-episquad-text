@@ -64,7 +64,7 @@ Koran<- gutenberg_download(2800)
 Bible1<-Bible %>% unnest_tokens(word, text)
 Buddhism1<- Buddhism %>% unnest_tokens(word, text)
 Koran1<-Koran %>% unnest_tokens(word, text)
-#Analysis
+#Analysis: The selected books are core guidance for three major religions-Christianity, Buddhism and Islam- in the world, I intend to evaluate sentiment messages conveyed in each book and make comparisons between books to see the different sentiment expressed in different religions.
 #Sentiment words distribution for each book
 Bible1 %>% inner_join(get_sentiments("nrc")) %>% group_by(sentiment) %>% count() %>% mutate(proporation=n/sum(n))
 Buddhism1 %>% inner_join(get_sentiments("nrc")) %>% group_by(sentiment) %>% count() %>% mutate(proporation=n/sum(n))
@@ -77,13 +77,13 @@ Koran1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="positive") 
 Bible1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="negative") %>% group_by(word) %>% count() %>% arrange(desc(n))
 Buddhism1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="negative") %>% group_by(word) %>% count() %>% arrange(desc(n))
 Koran1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="negative") %>% group_by(word) %>% count() %>% arrange(desc(n))
-#Find positive/negative proportion for each book
+#Find positive/negative proportions for each book
 Bible1 %>% inner_join(get_sentiments("bing")) %>% group_by(sentiment) %>% count() %>% mutate(proportion=n/sum(n))
 Buddhism1 %>% inner_join(get_sentiments("bing")) %>% group_by(sentiment) %>% count() %>% mutate(proportion=n/sum(n))
 Koran1 %>% inner_join(get_sentiments("bing")) %>% group_by(sentiment) %>% count() %>% mutate(proportion=n/sum(n))
 #Sentiment score per word for each book
 Bible1 %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(Bible1))
-Buddhism1 %>% inner_join(get_sentiments("afinn")) %>% summarize(general_sentiment=sum(score)/nrow(Buddhism1))
-Koran1 %>% inner_join(get_sentiments("afinn")) %>% summarize(general_sentiment=sum(score)/nrow(Koran1))
+Buddhism1 %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(Buddhism1))
+Koran1 %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(Koran1))
 
 ```
