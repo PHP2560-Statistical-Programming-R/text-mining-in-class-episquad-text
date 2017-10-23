@@ -45,7 +45,7 @@ We will spend the next 2 weeks working on analyzing textual data in R. You will 
 - Answer these questions with the data using tables and graphics
 - Each group member must have their own unique question that they code the answer for. 
 ```{r}
-install.packages("gutenbergr")
+
 library(gutenbergr)
 library(dplyr)
 gutenberg_metadata
@@ -61,26 +61,58 @@ Koran<- gutenberg_download(2800)
 
 ```{r}
 # clean data
+library(tidytext)
+library(ggplot2)
+library(directlabels)
+library(gridExtra)
 Bible1<-Bible %>% unnest_tokens(word, text)
 Buddhism1<- Buddhism %>% unnest_tokens(word, text)
 Koran1<-Koran %>% unnest_tokens(word, text)
 #Analysis: The selected books are core guidance for three major religions-Christianity, Buddhism and Islam- in the world, I intend to evaluate sentiment messages conveyed in each book and make comparisons between books to see the different sentiment expressed in different religions.
+
 #Sentiment words distribution for each book
-Bible1 %>% inner_join(get_sentiments("nrc")) %>% group_by(sentiment) %>% count() %>% mutate(proporation=n/sum(n))
-Buddhism1 %>% inner_join(get_sentiments("nrc")) %>% group_by(sentiment) %>% count() %>% mutate(proporation=n/sum(n))
-Koran1 %>% inner_join(get_sentiments("nrc")) %>% group_by(sentiment) %>% count() %>% mutate(proporation=n/sum(n))
-#Find most positive words in each book
-Bible1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="positive") %>% group_by(word) %>% count() %>% arrange(desc(n))
-Buddhism1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="positive") %>% group_by(word) %>% count() %>% arrange(desc(n))
-Koran1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="positive") %>% group_by(word) %>% count() %>% arrange(desc(n))
+#Get the proportion distribution table for Bible
+Bible_prop<-Bible1 %>% inner_join(get_sentiments("nrc")) %>% group_by(sentiment) %>% count() %>% mutate(proportion=n/sum(n)) 
+#Creat Barplot 
+g1_Bi<-ggplot(Bible_prop, aes(x=sentiment,y=proportion,fill=sentiment)) + geom_bar(stat = "identity",show.legend = F)  + xlab("Sentiment Words") + ylab("Proportion") + ylim(0,0.25) + ggtitle("Sentiment words Distribution for Bible")
+
+#Get the proportion distribution table for Buddhism                                                                          
+Buddhism_prop<-Buddhism1 %>% inner_join(get_sentiments("nrc")) %>% group_by(sentiment) %>% count() %>% mutate(proportion=n/sum(n)) 
+#Creat Barplot 
+g1_Bu<-ggplot(Buddhism_prop,aes(x=sentiment,y=proportion,fill=sentiment)) + geom_bar(stat = "identity",show.legend = F) + xlab("Sentiment Words") + ylab("Proportion") + ylim(0,0.25) + ggtitle("Sentiment words Distribution for Buddhism")
+
+#Get the proportion distribution table for Koran
+Koran_prop<-Koran1 %>% inner_join(get_sentiments("nrc")) %>% group_by(sentiment) %>% count() %>% mutate(proporation=n/sum(n))
+g1_Ko<-ggplot(Koran_prop,aes(x=sentiment,y=proportion,fill=sentiment)) + geom_bar(stat = "identity",show.legend = F) + xlab("Sentiment Words") + ylab("Proportion") + ylim(0,0.25) + ggtitle("Sentiment words Distribution for Koran")
+#Combine barplots for comparison
+grid.arrange(g1_Bi,g1_Bu,g1_Ko,ncol=3)
+
+
+#Find top10 positive words in each book
+Bible1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="positive") %>% group_by(word) %>% count() %>% arrange(desc(n)) %>% top_n(10) %>% rename(frequency=n)
+Buddhism1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="positive") %>% group_by(word) %>% count() %>% arrange(desc(n)) %>% top_n(10) %>% rename(frequency=n)
+Koran1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="positive") %>% group_by(word) %>% count() %>% arrange(desc(n)) %>% top_n(10) %>% rename(frequency=n)
 #Find most negative words in each book
-Bible1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="negative") %>% group_by(word) %>% count() %>% arrange(desc(n))
-Buddhism1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="negative") %>% group_by(word) %>% count() %>% arrange(desc(n))
-Koran1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="negative") %>% group_by(word) %>% count() %>% arrange(desc(n))
+Bible1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="negative") %>% group_by(word) %>% count() %>% arrange(desc(n)) %>% top_n(10) %>% rename(frequency=n)
+Buddhism1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="negative") %>% group_by(word) %>% count() %>% arrange(desc(n)) %>% top_n(10) %>% rename(frequency=n)
+Koran1 %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="negative") %>% group_by(word) %>% count() %>% arrange(desc(n)) %>% top_n(10) %>% rename(frequency=n)
+
 #Find positive/negative proportions for each book
-Bible1 %>% inner_join(get_sentiments("bing")) %>% group_by(sentiment) %>% count() %>% mutate(proportion=n/sum(n))
-Buddhism1 %>% inner_join(get_sentiments("bing")) %>% group_by(sentiment) %>% count() %>% mutate(proportion=n/sum(n))
-Koran1 %>% inner_join(get_sentiments("bing")) %>% group_by(sentiment) %>% count() %>% mutate(proportion=n/sum(n))
+#positive/negative proportion for Bible
+Bible_pn<-Bible1 %>% inner_join(get_sentiments("bing")) %>% group_by(sentiment) %>% count() %>% mutate(proportion=n/sum(n))
+#Create Barplot
+g2_Bi<-ggplot(Bible_pn,aes(x=sentiment,y=proportion,fill=sentiment)) + geom_bar(stat = "identity",show.legend = F) + xlab("Sentiment") + ylab("Proportion") + ylim(0,0.6) + ggtitle("Bible")
+#positive/negative proportion for Buddhism
+Buddhism_pn<-Buddhism1 %>% inner_join(get_sentiments("bing")) %>% group_by(sentiment) %>% count() %>% mutate(proportion=n/sum(n))
+#Create Barplot
+g2_Bu<-ggplot(Buddhism_pn,aes(x=sentiment,y=proportion,fill=sentiment)) + geom_bar(stat = "identity",show.legend = F) + xlab("Sentiment") + ylab("Proportion") + ylim(0,0.6) + ggtitle("Buddhism")
+#positive/negative proportion for Buddhism
+Koran_pn<-Koran1 %>% inner_join(get_sentiments("bing")) %>% group_by(sentiment) %>% count() %>% mutate(proportion=n/sum(n))
+#Create Barplot
+g2_Ko<-ggplot(Koran_pn,aes(x=sentiment,y=proportion,fill=sentiment)) + geom_bar(stat = "identity",show.legend = F) + xlab("Sentiment") + ylab("Proportion") + ylim(0,0.6) + ggtitle("Koran")
+#Combine barplots for comparison
+grid.arrange(g2_Bi,g2_Bu,g2_Ko,ncol=3)
+
 #Sentiment score per word for each book
 Bible1 %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(Bible1))
 Buddhism1 %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(Buddhism1))
