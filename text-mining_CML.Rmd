@@ -42,28 +42,57 @@ library(dplyr)
 library(gutenbergr)
 gutenberg_metadata
 data("gutenbergr", package="gutenbergr")
-dt<-gutenberg_works(author == "Tagore, Rabindranath")
-wilde<- gutenberg_works(author=="Wilde, Oscar")
+
 picture<- gutenberg_download(174)
 gitanjali <- gutenberg_download(7164)
+Buddhism<- gutenberg_download(18223)
+Bible<- gutenberg_download(10)
+Koran<- gutenberg_download(2800)
 ```
 
 ```{r}
 #Data Cleaning of picture
 library(tidytext)
 library(stringr)
-<<<<<<< HEAD
-numbers<- pattern==1:20
+
 picture.clean<- picture %>%  mutate(linenumber = row_number(), chapter = cumsum(str_detect(text, regex("chapter [\\divxlc]", ignore_case = TRUE)))) %>% filter(chapter >0) %>% unnest_tokens(word, text)
 ```
 
 ```{r}
-positve.words <-picture.clean %>% inner_join(get_sentiments("nrc")) %>% filter(sentiment=="positive") %>% group_by(chapter) %>% top_n(3, word)
-=======
-picture.chapter<- picture %>%  mutate(linenumber = row_number(), chapter = cumsum(str_detect(text, regex("chapter [\\divxlc]", ignore_case = TRUE)))) %>% filter(chapter >0)
->>>>>>> ae6c7bbabee6181a4716fa1527a26a3ea870e1fe
+#Extracting Data
+positive.words <-picture.clean %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="positive") %>% group_by(chapter) %>% top_n(10, word)
+positive.words
+negative.words <-picture.clean %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="negative") %>% group_by(chapter) %>% top_n(10, word)
+negative.words
+pos.neg<- picture.clean %>% inner_join(get_sentiments("bing")) %>% group_by(chapter) %>% count(chapter, sentiment) %>% rename(total_words=n)
+Dorien.score<-picture.clean %>% inner_join(get_sentiments("afinn")) %>% mutate(total= sum(score)) %>% summarize(score_per_word=sum(score)/nrow(picture.clean))
+                                                                                                                
+Chapter.score<- picture.clean %>% inner_join(get_sentiments("afinn")) %>% group_by(chapter) %>% summarise(chapter.score=sum(score)) 
+```
+
+```{r}
+library(ggplot2)
+#how does the character sentiments change per chapter? 
+#use a time scale
+# total amount of positive or negative words?
+chapter.sentiment<- picture.clean %>% inner_join((get_sentiments("nrc"))) %>% group_by(chapter)%>% count(sentiment)
+ggplot(chapter.sentiment, aes(x=sentiment, y=n))+ theme_classic() + geom_point(aes(color=sentiment), show.legend = F)+ggtitle("Top 10 Sentiment per Chapter \nThe Portrait of Dorian Grey") + ylab("Number")
+
+ggplot(pos.neg, aes(x = chapter, y=total_words)) + theme_classic()+
+  geom_col(aes(fill=sentiment)) +scale_fill_manual("legend", values = c("goldenrod3","cadetblue")) + ggtitle("Overall Chapter Sentiments") +ylab("Word Count")
+
+ ggplot(pos.neg, aes(chapter, total_words, color=sentiment)) + theme_classic()+geom_line(size = 1.5) +
+    geom_smooth(method = "lm", se = FALSE, lty = 2) + ylab("Number")+ ggtitle("Dichotomized Sentiment Per Chapter")+
+   expand_limits(y = 0)
+ 
+Dorien.score<-picture.clean %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(Bible1))
 
 ```
+
+```{r}
+#Comparing all three books
+# using "afinn" sentiment, which book is the most positive or the most negative?
+# will need to sum all words. 
 
 We will spend the next 2 weeks working on analyzing textual data in R. You will do the following:
 
