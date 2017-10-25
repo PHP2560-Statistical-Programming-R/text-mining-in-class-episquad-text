@@ -46,7 +46,13 @@ data("gutenbergr", package="gutenbergr")
 lewis_books<-gutenberg_works(author == "Carroll, Lewis") #df that contains the books by authors
 
 alice <- gutenberg_download(751) #download the books by book id in a dataframe
+Buddhism<- gutenberg_download(18223)
+Bible<- gutenberg_download(10)
+Koran<- gutenberg_download(2800)
+picture<- gutenberg_download(174)
+````
 
+```{r}
 ## cleaning the data:
 alice_tidy<- alice %>%  
             mutate(linenumber = row_number(), chapter = cumsum(str_detect(text, regex("chapter|CHAPTER [\\divxlc]", ignore_case = TRUE)))) %>% #breaks down the book by chapter and stores the line number
@@ -54,6 +60,10 @@ alice_tidy<- alice %>%
 
 #Questions to answer: 1. what is the overall emotion/sentiment in the book and how does the negative and positive sentiments changes throughout the chapters? 2. what is the total proportion of positive and negative sentiments 3. top 10 positive and negative words
 
+picture.clean<- picture %>%  mutate(linenumber = row_number(), chapter = cumsum(str_detect(text, regex("chapter [\\divxlc]", ignore_case = TRUE)))) %>% filter(chapter >0) %>% unnest_tokens(word, text)
+Bible1<-Bible %>% unnest_tokens(word, text)
+Buddhism1<- Buddhism %>% unnest_tokens(word, text)
+Koran1<-Koran %>% unnest_tokens(word, text)
 ```
 
 ```{r}
@@ -61,6 +71,7 @@ alice_tidy<- alice %>%
 alice_total<-alice_tidy %>% group_by(chapter) %>% count() %>% rename(total_words=n) #counting the total number of words in each chapter
 alice_tidy_total<-alice_tidy %>% left_join(alice_total, by="chapter") #joining the count column with the alice_tidy data
 alice_tidy_bing<-alice_tidy_total %>% inner_join(get_sentiments("bing")) #joining the sentiment with the tidy data with total_words column
+alice_tidy_afinn<-alice_tidy_total %>% inner_join(get_sentiments("afinn"))
 
 #Total length of each chapter: (try a similar scatter plot shown at the slide)
 alice_tidy_bing %>% count(chapter) %>% arrange(desc(n)) %>% #chapter 13 has much fewer words than other chapters 
@@ -153,14 +164,39 @@ library("SnowballC")
 library("wordcloud")
 library("RColorBrewer")
 library(dplyr)
+library(ggplot2)
 
-z<-alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) 
-wordcloud(words = z$word, freq = z$n, min.freq = 1,
+cloud<-alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) 
+wordcloud(words = cloud$word, freq = cloud$n, min.freq = 1,
           max.words=200, random.order=FALSE, rot.per=0.35, 
           colors=brewer.pal(8, "Dark2"))
 
-
+install.packages("ggrepel")
+library(ggrepel)
+cloud %>% filter(n>10) %>%
+  ggplot(aes(x=word, y=n, color=sentiment)) +
+  geom_point() +
+  xlab("NULL") +
+  geom_text(aes(label=sentiment), force=20)
 ```
+
+```{r}
+#sentiment score and coparing with other books
+alice_score<-alice_tidy %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(alice))
+
+
+
+Bible_score<-Bible1 %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(Bible1))
+Buddhism_score<-Buddhism1 %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(Buddhism1))
+Koran_score<-Koran1 %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(Koran1))
+picture_score<-picture.clean %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(picture))
+picture_score
+score<-rbind(alice_score, Bible_score,Buddhism_score, Koran_score, picture_score) %>%  %>% mutate(book=c("Alice","Bible","Buddhism","Koran", "Picture")) %>%
+ggplot(score,aes(x=book,y=score_per_word,fill=book)) + geom_bar(stat = "identity", show.legend = FALSE) + xlab("Book") + ylab("Score") + ggtitle("Sentiment score per word")
+
+
+````
+
 
 # Timelines and Task
 
