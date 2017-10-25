@@ -39,19 +39,20 @@ library(gutenbergr)
 library(dplyr)
 library(tidytext)
 library(stringr)
+library(ggplot2)
 gutenberg_metadata
 data("gutenbergr", package="gutenbergr")
 
-dt<-gutenberg_works(author == "Carroll, Lewis") #df that contains the books by authors
+lewis_books<-gutenberg_works(author == "Carroll, Lewis") #df that contains the books by authors
 
 alice <- gutenberg_download(751) #download the books by book id in a dataframe
 
 ## cleaning the data:
 alice_tidy<- alice %>%  
-            mutate(linenumber = row_number(), chapter = cumsum(str_detect(text, regex("chapter|CHAPTER [\\divxlc]", ignore_case = TRUE)))) %>% 
+            mutate(linenumber = row_number(), chapter = cumsum(str_detect(text, regex("chapter|CHAPTER [\\divxlc]", ignore_case = TRUE)))) %>% #breaks down the book by chapter and stores the line number
   filter(chapter >0) %>% unnest_tokens(word, text)
 
-#Questions to answer: 1. How does the proportion of negative and positive sentiments changes throughout the chapters? 2. what is the total proportion of positive and negative sentiments 3. top 10 positive and negative words
+#Questions to answer: 1. what is the overall emotion/sentiment in the book and how does the negative and positive sentiments changes throughout the chapters? 2. what is the total proportion of positive and negative sentiments 3. top 10 positive and negative words
 
 ```
 
@@ -59,28 +60,42 @@ alice_tidy<- alice %>%
 #joining with the sentiment
 alice_total<-alice_tidy %>% group_by(chapter) %>% count() %>% rename(total_words=n) #counting the total number of words in each chapter
 alice_tidy_total<-alice_tidy %>% left_join(alice_total, by="chapter") #joining the count column with the alice_tidy data
-alice_tidy_bing<-alice_tidy_total %>% inner_join(get_sentiments("bing")) #joining the sentiment with the tidy data with total column
+alice_tidy_bing<-alice_tidy_total %>% inner_join(get_sentiments("bing")) #joining the sentiment with the tidy data with total_words column
 
-#what are the top 10 positive and negative words?
-positive_10<-alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) %>% filter(sentiment == "positive") %>% top_n(10)
-negative_10<-alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) %>% filter(sentiment == "negative") %>% top_n(10)
+#Total length of each chapter: (try a similar scatter plot shown at the slide)
+alice_tidy_bing %>% count(chapter) %>% arrange(desc(n)) %>% #chapter 13 has much fewer words than other chapters 
+ggplot(aes(x=chapter, y=n, color=chapter)) +
+  geom_point()
 
-
-
-#Total length of each chapter:
-alice_tidy_bing %>% count(chapter) %>% arrange(desc(n)) #chapter 13 has much fewer words than other chapters 
-alice_tidy_total %>% count(chapter) %>% arrange(desc(n))
+##word choices in each chapter:
+alice_tidy_bing %>%
+     # Group by chapter
+    group_by(chapter) %>%
+    count(word) %>%
+    # Take the top 5 words for each chapter
+    top_n(5) %>%
+    ungroup() %>%
+    mutate(word = reorder(paste(word, chapter, sep = "__"), n)) %>%
+    # Set up the plot with aes()
+    ggplot(aes(word, n, fill=chapter)) +
+    geom_col(show.legend = FALSE) +
+    scale_x_discrete(labels = function(x) gsub("__.+$", "", x)) +
+    facet_wrap(~ chapter, , scales = "free") +
+    coord_flip()
 
 ```
 
 ```{r}
+#what are the top 20 positive and negative words in the book?
+alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) %>% filter(sentiment == "positive") %>% top_n(20)
+alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) %>% filter(sentiment == "negative") %>% top_n(20)
 
-#graph to show the distribution of positive and negative words by each chapter
+#graph to show the frequency distribution of positive and negative words by each chapter
 alice_tidy_bing %>% group_by(chapter) %>% count(chapter, sentiment) %>% rename(total_words=n) %>%
 #Pyramid plot of each chapter by positive and negative words (word frequency by each chapter):
   ggplot(aes(x = as.factor(chapter), fill = sentiment)) + 
   geom_bar(data=filter(alice_tidy_bing, sentiment == "positive")) + 
-  geom_bar(data=filter(alice_tidy_bing, sentiment == "negative"),aes(y=..count..*(-1))) + 
+  geom_bar(data=filter(alice_tidy_bing, sentiment == "negative"),aes(y=..count..*(-1))) + #aes option aligns the plot to 0 and counts on both side of x axis from 0 to positive
   scale_y_continuous(breaks=seq(-350,350,50),labels=abs(seq(-350,350,50))) + 
   coord_flip()
 
@@ -94,6 +109,7 @@ alice_tidy_positive<-alice_tidy_bing %>%
    mutate(percent=n/total_words) %>%
    filter(sentiment == "positive") %>%
   arrange(desc(percent)) # the most positive chapters were 13, 1, 10, 2, 11. So, may be the book started in a positive way and have a happy ending
+alice_tidy_positive
 
 #What percent of negative words each chapters have?
 alice_tidy_negative<-alice_tidy_bing %>% 
@@ -101,6 +117,7 @@ alice_tidy_negative<-alice_tidy_bing %>%
    mutate(percent=n/total_words) %>%
    filter(sentiment == "negative") %>%
   arrange(desc(percent)) # the most negative chapters were 8,5,2,12,1. There might be something problem happening in the middle of the book. chapter 1 and 2 looks like to have high percent of positive and negative sentiments. Chapter 13 have the lowest percent of negative words indicating a happy ending
+alice_tidy_negative
 
 
 ```
@@ -126,7 +143,21 @@ alice_tidy_bing %>%
 
 
 ```{r}
-#To do: make function to repeat with the different lexicons: nrc, afinn
+#To do: wordcloud
+# Install
+install.packages("SnowballC") # for text stemming
+install.packages("wordcloud") # word-cloud generator 
+install.packages("RColorBrewer") # color palettes
+# Load
+library("SnowballC")
+library("wordcloud")
+library("RColorBrewer")
+library(dplyr)
+
+z<-alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) 
+wordcloud(words = z$word, freq = z$n, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
 
 
 ```
