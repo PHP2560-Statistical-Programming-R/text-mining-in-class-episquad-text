@@ -44,7 +44,7 @@ gutenberg_metadata
 data("gutenbergr", package="gutenbergr")
 
 picture<- gutenberg_download(174)
-gitanjali <- gutenberg_download(7164)
+alice <- gutenberg_download(751)
 Buddhism<- gutenberg_download(18223)
 Bible<- gutenberg_download(10)
 Koran<- gutenberg_download(2800)
@@ -58,6 +58,16 @@ library(stringr)
 picture.clean<- picture %>%  mutate(linenumber = row_number(), chapter = cumsum(str_detect(text, regex("chapter [\\divxlc]", ignore_case = TRUE)))) %>% filter(chapter >0) %>% unnest_tokens(word, text)
 ```
 
+
+```{r}
+#Clean Group Books
+Bible1<-Bible %>% unnest_tokens(word, text)
+Buddhism1<- Buddhism %>% unnest_tokens(word, text)
+Koran1<-Koran %>% unnest_tokens(word, text)
+alice_tidy<- alice %>%  mutate(linenumber = row_number(), chapter = cumsum(str_detect(text, regex("chapter|CHAPTER [\\divxlc]", ignore_case = TRUE)))) %>% #breaks down the book by chapter and stores the line number
+  filter(chapter >0) %>% unnest_tokens(word, text)
+```
+
 ```{r}
 #Extracting Data
 positive.words <-picture.clean %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="positive") %>% group_by(chapter) %>% top_n(10, word)
@@ -65,8 +75,30 @@ positive.words
 negative.words <-picture.clean %>% inner_join(get_sentiments("bing")) %>% filter(sentiment=="negative") %>% group_by(chapter) %>% top_n(10, word)
 negative.words
 pos.neg<- picture.clean %>% inner_join(get_sentiments("bing")) %>% group_by(chapter) %>% count(chapter, sentiment) %>% rename(total_words=n)
-Dorien.score<-picture.clean %>% inner_join(get_sentiments("afinn")) %>% mutate(total= sum(score)) %>% summarize(score_per_word=sum(score)/nrow(picture.clean))
 Chapter.score<- picture.clean %>% inner_join(get_sentiments("afinn")) %>% group_by(chapter) %>% summarise(chapter.score=sum(score)) 
+```
+
+```{r}
+#Group Comparison
+#Group Extraction
+Dorien.score<-picture.clean %>% inner_join(get_sentiments("afinn")) %>% summarise(score_per_word=sum(score)/nrow(picture.clean))
+Bible_score<-Bible1 %>% inner_join(get_sentiments("afinn"))  %>% summarise(score_per_word=sum(score)/nrow(Bible1))
+Buddhism_score<-Buddhism1 %>% inner_join(get_sentiments("afinn"))  %>% summarise(score_per_word=sum(score)/nrow(Buddhism1))
+Koran_score<-Koran1 %>% inner_join(get_sentiments("afinn"))  %>% summarise(score_per_word=sum(score)/nrow(Koran1))
+Alice_score<-alice_tidy %>% inner_join(get_sentiments("afinn"))  %>% summarise(score_per_word=sum(score)/nrow(alice_tidy))
+
+Bible_total<-Bible1 %>% inner_join(get_sentiments("afinn")) %>% summarise(total= sum(score))
+Dorien.total<-picture.clean %>% inner_join(get_sentiments("afinn")) %>% summarise(total= sum(score))
+Buddhism_total<-Buddhism1 %>% inner_join(get_sentiments("afinn")) %>% summarise(total= sum(score))
+Koran_total<-Koran1 %>% inner_join(get_sentiments("afinn")) %>% summarise(total= sum(score))
+Alice_total<-alice_tidy %>% inner_join(get_sentiments("afinn")) %>% summarise(total= sum(score))
+
+score<-rbind(Bible_score,Buddhism_score, Koran_score, Dorien.score, Alice_score) %>% mutate(book=c("Bible","The Essence of Buddhism","Koran", "Picture of Dorian Gray", "Alice's Adventures in Wonderland"))
+score<- score%>% arrange(desc(score_per_word))
+total<-rbind(Bible_total,Buddhism_total, Koran_total, Dorien.total, Alice_total) %>% mutate(book=c("Bible","The Essence of Buddhism","Koran", "Picture of Dorian Gray", "Alice's Adventures in Wonderland")) 
+total<- total%>% arrange(desc(total))
+ggplot(score,aes(x=book,y=score_per_word,fill=book)) + theme_classic() +geom_bar(stat = "identity", show.legend = F)  + xlab("")+ ylab("Score Per Word") + ggtitle("Sentiment Score Per Word Comparison") +coord_flip()
+ggplot(total,aes(x=book,y=total,fill=book)) + theme_classic() +geom_bar(stat = "identity", show.legend = FALSE)  + xlab("")+ ylab("Score") + ggtitle("Total Score Book Comparison") +coord_flip()
 ```
 
 ```{r}
