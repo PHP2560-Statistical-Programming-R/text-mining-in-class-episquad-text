@@ -66,7 +66,6 @@ negative.words <-picture.clean %>% inner_join(get_sentiments("bing")) %>% filter
 negative.words
 pos.neg<- picture.clean %>% inner_join(get_sentiments("bing")) %>% group_by(chapter) %>% count(chapter, sentiment) %>% rename(total_words=n)
 Dorien.score<-picture.clean %>% inner_join(get_sentiments("afinn")) %>% mutate(total= sum(score)) %>% summarize(score_per_word=sum(score)/nrow(picture.clean))
-                                                                                                                
 Chapter.score<- picture.clean %>% inner_join(get_sentiments("afinn")) %>% group_by(chapter) %>% summarise(chapter.score=sum(score)) 
 ```
 
