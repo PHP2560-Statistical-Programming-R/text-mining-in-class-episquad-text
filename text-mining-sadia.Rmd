@@ -139,7 +139,8 @@ alice_bing_percent %>%
     geom_line(size = 1) +
     geom_smooth(method = "lm", se = FALSE, lty = 2) +
     expand_limits(y = 0) +
-    ggtitle("Percentage of positive and negative sentiments by chapter") 
+    ggtitle("Percentage of positive and negative sentiments by chapter") +
+   theme(plot.title = element_text(hjust = 0.5))
 # Throughout the chapters positve emotions increasing and negatives are decreasing and it looks like positive words had an abrupt increase at the end of the story.
 
 ```
@@ -167,11 +168,10 @@ Buddhism1<- Buddhism %>% unnest_tokens(word, text)
 Koran1<-Koran %>% unnest_tokens(word, text)
 ```
 
+#Sentiments score per word of the books
 ```{r}
 #sentiment score and comparing with other books
 alice_score<-alice_tidy %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(alice_tidy))
-
-
 
 Bible_score<-Bible1 %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(Bible1))
 Buddhism_score<-Buddhism1 %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(Buddhism1))
@@ -184,16 +184,62 @@ score<-rbind(alice_score, Bible_score,Buddhism_score, Koran_score, picture_score
 ggplot(score, aes(x=reorder(book, score_per_word) ,y=score_per_word,fill=book)) + 
   geom_bar(stat = "identity", show.legend = FALSE) + 
   xlab("Book") + 
-  ylab("Score") + 
+  ylab("Score per word") + 
   ggtitle("Sentiment score per word") +
-  coord_flip()
-
-
-
+  coord_flip()+
+  theme(plot.title = element_text(hjust = 0.5))
 
 ````
+#Total sentiment score of each book
+```{r}
+Bible_total<-Bible1 %>% inner_join(get_sentiments("afinn")) %>% summarise(total= sum(score))
+Picture_total<-picture.clean %>% inner_join(get_sentiments("afinn")) %>% summarise(total= sum(score))
+Buddhism_total<-Buddhism1 %>% inner_join(get_sentiments("afinn")) %>% summarise(total= sum(score))
+Koran_total<-Koran1 %>% inner_join(get_sentiments("afinn")) %>% summarise(total= sum(score))
+Alice_total<-alice_tidy %>% inner_join(get_sentiments("afinn")) %>% summarise(total= sum(score))
+
+total<-rbind(Bible_total,Buddhism_total, Koran_total, Picture_total, Alice_total) %>% mutate(book=c("Bible","The Essence of Buddhism","Koran", "Picture of Dorian Gray", "Alice's Adventures in Wonderland")) 
+
+#plot
+ggplot(total,aes(x=reorder(book, total),y=total,fill=book)) + 
+  geom_bar(stat = "identity", show.legend = FALSE) + 
+  xlab("Book") + 
+  ylab("Total score") + 
+  ggtitle("Total sentiment score of each book") +
+  coord_flip()+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+#Change of sentiments throughout the sections in all 5 books
+```{r}
+# sentiment in the books throughout the sections (assuming a section has on average 50 lines)
+install.packages("tidyr")
+library(tidyr)
+Bible<-Bible1 %>% mutate(linenumber = row_number()) %>% inner_join(get_sentiments("bing")) %>% mutate(book="bible") 
+Picture<-picture.clean %>% inner_join(get_sentiments("bing")) %>% mutate(book="picture")
+Buddhism<-Buddhism1 %>% mutate(linenumber = row_number()) %>% inner_join(get_sentiments("bing")) %>% mutate(book="buddhism")
+Koran<-Koran1 %>% mutate(linenumber = row_number()) %>% inner_join(get_sentiments("bing")) %>% mutate(book="koran")
+Alice<-alice_tidy %>% inner_join(get_sentiments("bing")) %>% mutate(book="alice")
+
+books<-bind_rows(Bible,Buddhism, Koran, Picture, Alice) 
 
 
+books %>%
+  count(book, index = linenumber %/% 50, sentiment) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative) %>%
+  # Put index on x-axis, sentiment on y-axis, and map comedy/tragedy to fill
+  ggplot(aes(index, sentiment, fill=sentiment)) +
+  # Make a bar chart with geom_col()
+  geom_col() +
+  # Separate panels with facet_wrap()
+  facet_wrap(~ book, scales = "free_x") +
+  scale_fill_gradient(low="blue", high="red") +
+  labs(x="Sections of the book", y="Overall sentiments", title="Change of sentiments throughout the books", fill="overall sentiment =\npositive-negative") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+```
 # Timelines and Task
 
 
