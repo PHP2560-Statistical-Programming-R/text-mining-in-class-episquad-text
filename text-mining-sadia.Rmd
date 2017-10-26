@@ -34,71 +34,71 @@ devtools::install_github("bradleyboehmke/harrypotter")
 
 Analyze the text for sentiment OR topic. **You do not need to do both**. The datacamp courses and [Tidy Text Mining with R](http://tidytextmining.com/) are good starting points for templates to perform this type of analysis, but feel free to *expand beyond these examples*.
 
+# Loading the libraries and the book
 ```{r}
+#Install
+#install.packages("SnowballC") # for text stemming
+#install.packages("wordcloud") # word-cloud generator 
+#install.packages("RColorBrewer") # color palettes
+# Load
+library(SnowballC)
+library(wordcloud)
+library(RColorBrewer)
 library(gutenbergr)
 library(dplyr)
 library(tidytext)
 library(stringr)
 library(ggplot2)
-gutenberg_metadata
-data("gutenbergr", package="gutenbergr")
 
-lewis_books<-gutenberg_works(author == "Carroll, Lewis") #df that contains the books by authors
-
-alice <- gutenberg_download(751) #download the books by book id in a dataframe
-Buddhism<- gutenberg_download(18223)
-Bible<- gutenberg_download(10)
-Koran<- gutenberg_download(2800)
-picture<- gutenberg_download(174)
+alice <- gutenberg_download(751) #download the book by book id in a dataframe
 ````
+## Alice's adventure in wonderland is a fantasy novel written by Lewis Carroll, narrating the story of little "Alice" who fells through the rabbit hole into a fantasy world. The book has total 13 chapters and I am trying to analyze the change of emotions throughout the book as alice expererienced different adventures in her wonderland!
+
+#Finally, I will compare this book with the books of my other team members to see the sentiments in different genre books
 
 ```{r}
-## cleaning the data:
+## cleaning the book:
 alice_tidy<- alice %>%  
-            mutate(linenumber = row_number(), chapter = cumsum(str_detect(text, regex("chapter|CHAPTER [\\divxlc]", ignore_case = TRUE)))) %>% #breaks down the book by chapter and stores the line number
-  filter(chapter >0) %>% unnest_tokens(word, text)
-
-#Questions to answer: 1. what is the overall emotion/sentiment in the book and how does the negative and positive sentiments changes throughout the chapters? 2. what is the total proportion of positive and negative sentiments 3. top 10 positive and negative words
-
-picture.clean<- picture %>%  mutate(linenumber = row_number(), chapter = cumsum(str_detect(text, regex("chapter [\\divxlc]", ignore_case = TRUE)))) %>% filter(chapter >0) %>% unnest_tokens(word, text)
-Bible1<-Bible %>% unnest_tokens(word, text)
-Buddhism1<- Buddhism %>% unnest_tokens(word, text)
-Koran1<-Koran %>% unnest_tokens(word, text)
+mutate(linenumber = row_number(), chapter = cumsum(str_detect(text,regex("chapter|CHAPTER[\\divxlc]", ignore_case = TRUE)))) %>% #breaks down the book by chapter and stores the line number
+filter(chapter >0) %>% unnest_tokens(word, text)
 ```
 
+
 ```{r}
-#joining with the sentiment
-alice_total<-alice_tidy %>% group_by(chapter) %>% count() %>% rename(total_words=n) #counting the total number of words in each chapter
-alice_tidy_total<-alice_tidy %>% left_join(alice_total, by="chapter") #joining the count column with the alice_tidy data
-alice_tidy_bing<-alice_tidy_total %>% inner_join(get_sentiments("bing")) #joining the sentiment with the tidy data with total_words column
-alice_tidy_afinn<-alice_tidy_total %>% inner_join(get_sentiments("afinn"))
+#joining with the sentiment 
 
-#Total length of each chapter: (try a similar scatter plot shown at the slide)
-alice_tidy_bing %>% count(chapter) %>% arrange(desc(n)) %>% #chapter 13 has much fewer words than other chapters 
-ggplot(aes(x=chapter, y=n, color=chapter)) +
-  geom_point()
+alice_tidy_bing<-alice_tidy %>% inner_join((get_sentiments("bing"))) 
 
-##word choices in each chapter:
+alice_bing_total<-alice_tidy_bing %>% group_by(chapter, sentiment) %>% mutate(total_words=n()) %>% distinct(chapter, .keep_all=TRUE) %>% select("chapter", "sentiment", "total_words") # creating a column for total positive and negative words
+```
+
+#Questions to answer: 
+1. Most common positive and negative words
+2. what is the overall emotion/sentiment in the book and how does the negative and positive sentiments changes throughout the chapters? 
+3. what is the total proportion of positive and negative sentiments 
+
+```{r}
+##Plot of most frequent words in each chapter:
+
 alice_tidy_bing %>%
-     # Group by chapter
     group_by(chapter) %>%
     count(word) %>%
     # Take the top 5 words for each chapter
     top_n(5) %>%
     ungroup() %>%
     mutate(word = reorder(paste(word, chapter, sep = "__"), n)) %>%
-    # Set up the plot with aes()
     ggplot(aes(word, n, fill=chapter)) +
     geom_col(show.legend = FALSE) +
     scale_x_discrete(labels = function(x) gsub("__.+$", "", x)) +
     facet_wrap(~ chapter, , scales = "free") +
-    coord_flip()
+    coord_flip() +
+    labs(x="", y="Frequency of Words", title="Most Frequent Words in Each Chapter") +
+   theme(plot.title = element_text(hjust = 0.5))
 
 ```
-
-```{r}
 #what are the top 20 positive and negative words in the book?
-alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) %>% filter(sentiment == "positive") %>% top_n(20)
+```{r}
+alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) %>% filter(sentiment == "positive") %>% top_n(20)  
 alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) %>% filter(sentiment == "negative") %>% top_n(20)
 
 #graph to show the frequency distribution of positive and negative words by each chapter
@@ -108,91 +108,87 @@ alice_tidy_bing %>% group_by(chapter) %>% count(chapter, sentiment) %>% rename(t
   geom_bar(data=filter(alice_tidy_bing, sentiment == "positive")) + 
   geom_bar(data=filter(alice_tidy_bing, sentiment == "negative"),aes(y=..count..*(-1))) + #aes option aligns the plot to 0 and counts on both side of x axis from 0 to positive
   scale_y_continuous(breaks=seq(-350,350,50),labels=abs(seq(-350,350,50))) + 
-  coord_flip()
+  coord_flip() +
+  labs(x="Chapter", y="Frequency", title="Frequency distribution of positive and negative sentiments by chapter")
 
 ```
 
-
+#What percents of positive and negative words each chapters have?
 ```{r} 
+alice_bing_percent<- alice_bing_total %>% #creating a data frame that contains the percent of positive and negative sentiments over the total sentiments
+    group_by(chapter) %>%
+    mutate(total = sum(total_words),
+         percent = total_words/total) 
+
 #What percent of positive words each chapters have?
-alice_tidy_positive<-alice_tidy_bing %>% 
-   count(chapter, sentiment, total_words) %>% #counts total positive and negative words in each chapter and keeps the total_words column (otherwise it wont be there)
-   mutate(percent=n/total_words) %>%
-   filter(sentiment == "positive") %>%
-  arrange(desc(percent)) # the most positive chapters were 13, 1, 10, 2, 11. So, may be the book started in a positive way and have a happy ending
-alice_tidy_positive
+alice_bing_percent %>%
+    filter(sentiment == "positive") %>%
+    arrange(desc(percent)) # the most positive chapters were 13, 6, 3, 1, 11. All the chapters have more than 50% of positive sentiments
 
 #What percent of negative words each chapters have?
-alice_tidy_negative<-alice_tidy_bing %>% 
-   count(chapter, sentiment, total_words) %>% #counts total positive and negative words in each chapter and keeps the total_words column (otherwise it wont be there)
-   mutate(percent=n/total_words) %>%
-   filter(sentiment == "negative") %>%
-  arrange(desc(percent)) # the most negative chapters were 8,5,2,12,1. There might be something problem happening in the middle of the book. chapter 1 and 2 looks like to have high percent of positive and negative sentiments. Chapter 13 have the lowest percent of negative words indicating a happy ending
-alice_tidy_negative
-
+alice_bing_percent %>%
+    filter(sentiment == "negative") %>%
+    arrange(desc(percent))
+# the most negative chapters were 8,12,5,7,2. There might be something problem happening in the middle of the book. chapter 1 and 2 looks like to have high percent of positive and negative sentiments. Chapter 13 have the lowest percent of negative words indicating a happy ending
 
 ```
-
-```{r}
 #ggplot of sentiments throughout the chapter
-library(ggplot2)
-alice_tidy_bing %>% 
-    # Filter for positive and negative words
-    filter(sentiment %in% c("positive", "negative")) %>%
-    # Count by date, sentiment, and total_words
-    count(chapter, sentiment, total_words) %>%
-    ungroup() %>%
-    mutate(percent = n / total_words) %>%
-    # Set up the plot with aes()
+```{r}
+alice_bing_percent %>%
     ggplot(aes(chapter, percent, color=sentiment)) +
-    geom_line(size = 1.5) +
+    geom_line(size = 1) +
     geom_smooth(method = "lm", se = FALSE, lty = 2) +
-    expand_limits(y = 0)
-# it looks like positive words had an abrupt increase at the end of the story. 
+    expand_limits(y = 0) +
+    ggtitle("Percentage of positive and negative sentiments by chapter") 
+# Throughout the chapters positve emotions increasing and negatives are decreasing and it looks like positive words had an abrupt increase at the end of the story.
 
 ```
 
 
+#Wordcloud of most common words of the book
 ```{r}
-#To do: wordcloud
-# Install
-install.packages("SnowballC") # for text stemming
-install.packages("wordcloud") # word-cloud generator 
-install.packages("RColorBrewer") # color palettes
-# Load
-library("SnowballC")
-library("wordcloud")
-library("RColorBrewer")
-library(dplyr)
-library(ggplot2)
-
-cloud<-alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) 
+cloud<-alice_tidy_bing %>% count(word, sentiment) %>% arrange(desc(n)) #data frame for wordcloud
 wordcloud(words = cloud$word, freq = cloud$n, min.freq = 1,
           max.words=200, random.order=FALSE, rot.per=0.35, 
           colors=brewer.pal(8, "Dark2"))
+```
 
-install.packages("ggrepel")
-library(ggrepel)
-cloud %>% filter(n>10) %>%
-  ggplot(aes(x=word, y=n, color=sentiment)) +
-  geom_point() +
-  xlab("NULL") +
-  geom_text(aes(label=sentiment), force=20)
+
+
+## Comparison with other books
+```{r}
+Buddhism<- gutenberg_download(18223)
+Bible<- gutenberg_download(10)
+Koran<- gutenberg_download(2800)
+picture<- gutenberg_download(174)
+picture.clean<- picture %>%  mutate(linenumber = row_number(), chapter = cumsum(str_detect(text, regex("chapter [\\divxlc]", ignore_case = TRUE)))) %>% filter(chapter >0) %>% unnest_tokens(word, text)
+Bible1<-Bible %>% unnest_tokens(word, text)
+Buddhism1<- Buddhism %>% unnest_tokens(word, text)
+Koran1<-Koran %>% unnest_tokens(word, text)
 ```
 
 ```{r}
-#sentiment score and coparing with other books
-alice_score<-alice_tidy %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(alice))
+#sentiment score and comparing with other books
+alice_score<-alice_tidy %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(alice_tidy))
 
 
 
 Bible_score<-Bible1 %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(Bible1))
 Buddhism_score<-Buddhism1 %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(Buddhism1))
 Koran_score<-Koran1 %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(Koran1))
-picture_score<-picture.clean %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(picture))
+picture_score<-picture.clean %>% inner_join(get_sentiments("afinn")) %>% summarize(score_per_word=sum(score)/nrow(picture.clean))
 picture_score
-score<-rbind(alice_score, Bible_score,Buddhism_score, Koran_score, picture_score) %>%  %>% mutate(book=c("Alice","Bible","Buddhism","Koran", "Picture")) %>%
-ggplot(score,aes(x=book,y=score_per_word,fill=book)) + geom_bar(stat = "identity", show.legend = FALSE) + xlab("Book") + ylab("Score") + ggtitle("Sentiment score per word")
+score<-rbind(alice_score, Bible_score,Buddhism_score, Koran_score, picture_score) %>%   mutate(book=c("Alice","Bible","Buddhism","Koran", "Picture")) 
+
+#plot
+ggplot(score, aes(x=reorder(book, score_per_word) ,y=score_per_word,fill=book)) + 
+  geom_bar(stat = "identity", show.legend = FALSE) + 
+  xlab("Book") + 
+  ylab("Score") + 
+  ggtitle("Sentiment score per word") +
+  coord_flip()
+
+
 
 
 ````
