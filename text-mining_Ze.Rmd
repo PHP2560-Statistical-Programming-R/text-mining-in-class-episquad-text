@@ -177,3 +177,24 @@ ggplot(score_all,aes(x=reorder(book,score_per_word),y=score_per_word,fill=book))
 ```
 
 Though Bible has the highest total score, but Alice's Adventures in Wonderland has highest score per word. That's because Bible is much longer.  Alice's Adventures in Wonderland is a fairy tale, it's a book for children, it actually makes sense that it conveys most positive messages among all books we selected.
+
+
+```{r, warning=FALSE, echo=FALSE}
+library(wordcloud)
+#Wordcloud of most common words of the book
+#wordcloud for Bible
+cloud_Bi<-Bible1 %>% inner_join(get_sentiments("bing"), by="word") %>% count(word, sentiment) %>% arrange(desc(n)) 
+wordcloud(words = cloud_Bi$word, freq = cloud_Bi$n, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+#wordcloud for Buddhism
+cloud_Bu<-Buddhism1 %>% inner_join(get_sentiments("bing"), by="word") %>% count(word, sentiment) %>% arrange(desc(n)) 
+wordcloud(words = cloud_Bu$word, freq = cloud_Bu$n, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+#wordcloud for Koran
+cloud_Ko<-Koran1 %>% inner_join(get_sentiments("bing"), by="word") %>% count(word, sentiment) %>% arrange(desc(n)) 
+wordcloud(words = cloud_Ko$word, freq = cloud_Ko$n, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+```
