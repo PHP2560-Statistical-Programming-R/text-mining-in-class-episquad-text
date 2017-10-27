@@ -125,7 +125,6 @@ score<-rbind(Bible_score,Buddhism_score, Koran_score, Dorien.score, Alice_score)
 score<- score%>% arrange(desc(score_per_word))
 total<-rbind(Bible_total,Buddhism_total, Koran_total, Dorien.total, Alice_total) %>% mutate(book=c("The Bible","The Essence of Buddhism","The Koran", "Picture of Dorian Gray", "Alice's Adventures in Wonderland")) 
 total<- total%>% arrange(desc(total))
-
 ```
 
 
