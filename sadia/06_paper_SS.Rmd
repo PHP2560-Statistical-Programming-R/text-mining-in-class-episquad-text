@@ -29,7 +29,7 @@ knitr::include_graphics("pic_SS/alice.png")
 
 ## The Books
 
-Books for our team's analysis was obtained from project Gutenberg collection <http://www.gutenberg.org/>. More detailed information can be found  here: [Data Download](data_download_SS.html). The book id's used to download the data was:
+Books for our team's analysis was obtained from project Gutenberg collection <http://www.gutenberg.org/>. More detailed information can be found  here: [Data Download](sadia/data_download_SS.html). The book id's used to download the data was:
 
 ```
 bookID <- c(751,174, 2800, 10, 18223)

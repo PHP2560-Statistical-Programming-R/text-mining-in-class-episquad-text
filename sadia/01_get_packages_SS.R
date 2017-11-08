@@ -1,5 +1,5 @@
 ## This function checks the installed packages on local computer and installs if already not installed and loads them  
-source("check_packages_SS.R")
+source("sadia/check_packages_SS.R")
 package_check(c("dplyr","ggplot2","gutenbergr","stringr", "stringi", "tidytext", 
                  "tidyr", "gridExtra", "SnowballC", "wordcloud", "RColorBrewer"))
 
