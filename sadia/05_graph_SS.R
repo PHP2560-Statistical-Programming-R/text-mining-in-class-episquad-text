@@ -1,7 +1,7 @@
 
-load("data_SS/data_bing.Rda")
-load("data_SS/data_afinn.Rda")
-dir.create("graph_SS/", showWarnings = FALSE)
+load("sadia/data_SS/data_bing.Rda")
+load("sadia/data_SS/data_afinn.Rda")
+dir.create("sadia/graph_SS/", showWarnings = FALSE)
 
 
 ##Plot of most frequent words in each chapter:
@@ -21,7 +21,7 @@ frq_words_chapter<- data_bing %>%
   labs(x="", y="Frequency of Words") +
   theme(plot.title = element_text(hjust = 0.5), text = element_text(size = 7)) 
   
-ggsave(filename="graph_SS/01_frq_words_chapter.png", plot=frq_words_chapter, height = 4, width = 4)
+ggsave(filename="sadia/graph_SS/01_frq_words_chapter.png", plot=frq_words_chapter, height = 4, width = 4)
 
 #frequency distribution of positive and negative words by each chapter
 pos_neg_chapter <- data_bing %>% filter(gutenberg_id == 751 & chapter>0) %>% group_by(chapter) %>% count(chapter, sentiment) %>% rename(total_words=n) %>%
@@ -35,7 +35,7 @@ pos_neg_chapter <- data_bing %>% filter(gutenberg_id == 751 & chapter>0) %>% gro
   theme(text = element_text(size = 5)) +
   scale_fill_brewer(palette = "Set1")
 
-ggsave(filename="graph_SS/02_pos_neg_chapter.png", plot=pos_neg_chapter, height = 2, width = 4)
+ggsave(filename="sadia/graph_SS/02_pos_neg_chapter.png", plot=pos_neg_chapter, height = 2, width = 4)
 
 
 #Percentage of positive and negative sentiments throughout the chapter
@@ -48,7 +48,7 @@ percent_pos_neg<-data_bing %>% filter(gutenberg_id == 751 & chapter>0) %>%
   theme(plot.title = element_text(hjust = 0.5), text = element_text(size = 5))
 # Throughout the chapters positve emotions increasing and negatives are decreasing and it looks like positive words had an abrupt increase at the end of the story.
 
-ggsave(filename="graph_SS/03_percent_pos_neg.png", plot=percent_pos_neg, height = 2, width = 5)
+ggsave(filename="sadia/graph_SS/03_percent_pos_neg.png", plot=percent_pos_neg, height = 2, width = 5)
 
 
 #Scatterplot of sentiment throughout the sections (made-up sections where each section have 50 lines)
@@ -77,10 +77,10 @@ p2 <-p1 + geom_text(aes(label=section), color="gray20",
         legend.key.height=unit(0.5,"line"),
         axis.text = element_text(face="italic")) 
 
-ggsave(filename="graph_SS/04_sentiment_per_section.png", plot=p2, height = 2.5, width = 4)
+ggsave(filename="sadia/graph_SS/04_sentiment_per_section.png", plot=p2, height = 2.5, width = 4)
 
 #Wordcloud of most common words of the book
-png("graph_SS/05_wc.png")
+png("sadia/graph_SS/05_wc.png")
 
 cloud <- data_bing %>% filter(gutenberg_id == 751 & chapter>0) %>% count(word, sentiment) %>% arrange(desc(n)) #data frame for wordcloud
 wc<- wordcloud(words = cloud$word, freq = cloud$n, min.freq = 1,
@@ -114,7 +114,7 @@ sentiment_per_book <- data_bing %>%
         legend.key.height=unit(0.5,"line"),
         strip.text.x = element_text(size = 5, colour = "darkblue"))
 
-ggsave(filename="graph_SS/06_sentiments_per_book.png", plot=sentiment_per_book, height = 2.5, width = 4)
+ggsave(filename="sadia/graph_SS/06_sentiments_per_book.png", plot=sentiment_per_book, height = 2.5, width = 4)
 
 
 #Total Sentiment score and score per word of the books
@@ -165,7 +165,7 @@ total_score<-ggplot(total,aes(x=reorder(book, total),y=total,fill=book)) +
 
 plots<- grid.arrange(total_score, score_per_word, ncol=2)
 
-ggsave(filename="graph_SS/07_comparison_other_book.png", 
+ggsave(filename="sadia/graph_SS/07_comparison_other_book.png", 
        plot=plots, height = 2.5, width = 10)
 
 

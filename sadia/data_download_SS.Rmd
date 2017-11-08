@@ -12,7 +12,7 @@ output: html_document
 ```{r, eval=FALSE}
 
 ## This function checks the installed packages on local computer and installs if already not installed and loads them  
-source("check_packages_SS.R")
+source("sadia/check_packages_SS.R")
 package_check(c("dplyr","ggplot2","gutenbergr","stringr", "stringi", "tidytext", "tidyr", "gridExtra", "SnowballC", "wordcloud", "RColorBrewer"))
 
 # dplyr # for data manipulation
@@ -47,12 +47,12 @@ get_book <- function(bookID){
   #Create directory, if it already exists then dont show warnings.
   # This eliminates the need for setwd
   # running my code will create these files whereever you store this data in
-  dir.create("data_SS/", showWarnings = FALSE)
+  dir.create("sadia/data_SS/", showWarnings = FALSE)
   
   booklist <- list() #list of dataframes that will contain all the 5 books
   for (i in 1:length(bookID)){
     booklist[[i]] <- gutenberg_download(bookID[i]) #download one by one and save in the list
-    save(booklist, file="data_SS/booklist.rda")
+    save(booklist, file="sadia/data_SS/booklist.rda")
   }
   # print(booklist) debug print
 }
@@ -73,7 +73,7 @@ get_book(bookID)
 ```
 
 ```{r, eval=TRUE}
-load("data_SS/booklist.rda")
+load("sadia/data_SS/booklist.rda")
 str(booklist) #We can then see that what we have a list of 5 books with the texts of each book in a dataframe
 ```
 
@@ -81,13 +81,13 @@ Our next goal is to clean the books (removing spaces, punctuations, arranging by
 
 ```{r, eval=FALSE}
 clean_book <- function(bookID){
-  load("data_SS/booklist.rda")
+  load("sadia/data_SS/booklist.rda")
   tidy_books <- list()
   for (i in 1:length(bookID)){
     tidy_books[[i]] <- booklist[[i]] %>%mutate(linenumber = row_number(), chapter = cumsum(str_detect(text,regex("chapter|CHAPTER[\\divxlc]", 
                     ignore_case = TRUE)))) %>% unnest_tokens(word, text)
      }
-  save(tidy_books, file = "data_SS/tidy_books.Rda")
+  save(tidy_books, file = "sadia/data_SS/tidy_books.Rda")
   #print( str(tidy_books)) #debug print
 }
 
