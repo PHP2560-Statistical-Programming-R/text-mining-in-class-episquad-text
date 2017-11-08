@@ -80,11 +80,7 @@ p2 <-p1 + geom_text(aes(label=section), color="gray20",
 ggsave(filename="graph_SS/04_sentiment_per_section.png", plot=p2, height = 2.5, width = 4)
 
 #Wordcloud of most common words of the book
-png("graph_SS/05_wc.png", width = 3.25,
-    height    = 3.25,
-    units     = "in",
-    res       = 1200,
-    pointsize = 4)
+png("graph_SS/05_wc.png")
 
 cloud <- data_bing %>% filter(gutenberg_id == 751 & chapter>0) %>% count(word, sentiment) %>% arrange(desc(n)) #data frame for wordcloud
 wc<- wordcloud(words = cloud$word, freq = cloud$n, min.freq = 1,

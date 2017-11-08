@@ -167,7 +167,6 @@ package_check(c(&quot;dplyr&quot;,&quot;ggplot2&quot;,&quot;gutenbergr&quot;,&qu
   }
   # print(booklist) debug print
 }
-
 get_book(bookID)</code></pre>
 <p>We can take the <code>.rda</code> file and look at the structure of the list:</p>
 <pre class="r"><code>bookID &lt;-c(751, 174, 2800, 10, 18223)
@@ -178,7 +177,6 @@ get_book(bookID)</code></pre>
 # 18223: The Essence of Buddhism (Ze will analyze this books)
 get_book(bookID)</code></pre>
 <pre class="r"><code>load(&quot;data_SS/booklist.rda&quot;)
-
 str(booklist) #We can then see that what we have a list of 5 books with the texts of each book in a dataframe</code></pre>
 <pre><code>## List of 5
 ##  $ :Classes 'tbl_df', 'tbl' and 'data.frame':    9256 obs. of  2 variables:
@@ -209,7 +207,7 @@ str(booklist) #We can then see that what we have a list of 5 books with the text
 }
 
 clean_book(bookID)</code></pre>
-<p>We now have a data frame output from this. We then create the following functions from this data:</p>
+<p>We now have a data frame output from this. We then create the following files containing functions and analysis from this data:</p>
 <pre><code>01_get_packages_SS.R   # install the required packages
 02_get_books_SS.R    # download the books
 03_clean_books_SS   # clean the books
