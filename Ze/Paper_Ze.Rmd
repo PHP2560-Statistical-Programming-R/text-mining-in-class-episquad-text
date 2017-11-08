@@ -26,17 +26,24 @@ From the comparisons of sentiment words distributions, we can see all of three r
 
 Bible
 ```{r, echo=FALSE}
-Bible_t2
+table1 <- as.data.frame(Bible_t2)
+names(table1) <-c("Word", "Frequency")
+knitr::kable(table1)
+
 ```
 
 Buddhism
 ```{r, echo=FALSE}
-Buddhism_t2
+table2 <- as.data.frame(Buddhism_t2)
+names(table2) <-c("Word", "Frequency")
+knitr::kable(table2)
 ```
 
 Koran
 ```{r, echo=FALSE}
-Koran_t2
+table3 <- as.data.frame(Koran_t2)
+names(table3) <-c("Word", "Frequency")
+knitr::kable(table3)
 ```
 
 Besides general positive words like "great","like", Bible used more "holy","heaven","peace", Buddhism focused more on "compassion", "happiness", "wisdom" and "benefit" and Koran emphaized more on "mercy" and "compassion".
@@ -46,17 +53,23 @@ Besides general positive words like "great","like", Bible used more "holy","heav
 
 Bible
 ```{r, echo=FALSE}
-Bible_t1
+table4 <- as.data.frame(Bible_t1)
+names(table4) <-c("Word", "Frequency")
+knitr::kable(table4)
 ```
 
 Buddhism
 ```{r, echo=FALSE}
-Buddhism_t1
+table5 <- as.data.frame(Buddhism_t1)
+names(table5) <-c("Word", "Frequency")
+knitr::kable(table5)
 ```
 
 Koran
 ```{r, echo=FALSE}
-Koran_t1
+table6 <- as.data.frame(Koran_t1)
+names(table6) <-c("Word", "Frequency")
+knitr::kable(table6)
 ```
 
 Three religious books all talked a lot about "evil", "sin" and "fear". Buddhism talked more about "pity" while Koran talked more about "infidels".
