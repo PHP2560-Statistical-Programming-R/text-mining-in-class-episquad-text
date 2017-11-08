@@ -29,7 +29,7 @@ package_check(c("dplyr","ggplot2","gutenbergr","stringr", "stringi", "tidytext",
 
 ## Initial Scraping
 
-We begin by downloading the books with the "gutenberg_download" function of gutenbergr package. "gutenbergr" package has other functions like:
+We downloaded the books with the "gutenberg_download" function of gutenbergr package. "gutenbergr" package has other functions like:
 
 - "gutenberg_metadata" that shows information about each work, pairing Gutenberg ID with title, author, language, etc and 
 - "gutenberg_authors" that shows information about each author, such as aliases and birth/death year.
@@ -39,9 +39,9 @@ We begin by downloading the books with the "gutenberg_download" function of gute
 
 -Finally, I will compare this book with the books of my other team members (Picture of Dorian Gray choosen by Catrina; and Quran, Bible and The Essence of Buddhism choosen by Ze) to see the variation of sentiments in different genre books
 
-- The 5 downloaded books are saved in a list `booklist.rda` in the `data_SS` folder.
 
 
+The following function will download the books and save in a list `booklist.rda` in the `data_SS` folder
 ```{r, eval=FALSE}
 get_book <- function(bookID){
   #Create directory, if it already exists then dont show warnings.
@@ -60,8 +60,7 @@ get_book(bookID)
 ```
 
 
-We can take the `.rda` file and look at the structure of the list:
-
+Here are the book ids to download 5 books that will be analyzed by our team:
 ```{r, eval=FALSE}
 bookID <-c(751, 174, 2800, 10, 18223)
 # 751: Alice's Adventure in Wonderland (I will analyze this book)
@@ -72,12 +71,13 @@ bookID <-c(751, 174, 2800, 10, 18223)
 get_book(bookID)
 ```
 
+We can see the structure of the booklist by taking the `.rda` file:
 ```{r, eval=TRUE}
-load("sadia/data_SS/booklist.rda")
+load("data_SS/booklist.rda")
 str(booklist) #We can then see that what we have a list of 5 books with the texts of each book in a dataframe
 ```
 
-Our next goal is to clean the books (removing spaces, punctuations, arranging by chapter) and to create a data frame of all books `tidy_books.rda`:
+As the next step, we have cleaned the books (removing spaces, punctuations, arranging by chapter) and created a data frame of all books `tidy_books.rda`:
 
 ```{r, eval=FALSE}
 clean_book <- function(bookID){

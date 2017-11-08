@@ -126,7 +126,7 @@ $(document).ready(function () {
 <div id="setup" class="section level2">
 <h2>Setup</h2>
 <pre class="r"><code>## This function checks the installed packages on local computer and installs if already not installed and loads them  
-source(&quot;check_packages_SS.R&quot;)
+source(&quot;sadia/check_packages_SS.R&quot;)
 package_check(c(&quot;dplyr&quot;,&quot;ggplot2&quot;,&quot;gutenbergr&quot;,&quot;stringr&quot;, &quot;stringi&quot;, &quot;tidytext&quot;, &quot;tidyr&quot;, &quot;gridExtra&quot;, &quot;SnowballC&quot;, &quot;wordcloud&quot;, &quot;RColorBrewer&quot;))
 
 # dplyr # for data manipulation
@@ -141,7 +141,7 @@ package_check(c(&quot;dplyr&quot;,&quot;ggplot2&quot;,&quot;gutenbergr&quot;,&qu
 </div>
 <div id="initial-scraping" class="section level2">
 <h2>Initial Scraping</h2>
-<p>We begin by downloading the books with the “gutenberg_download” function of gutenbergr package. “gutenbergr” package has other functions like:</p>
+<p>We downloaded the books with the “gutenberg_download” function of gutenbergr package. “gutenbergr” package has other functions like:</p>
 <ul>
 <li>“gutenberg_metadata” that shows information about each work, pairing Gutenberg ID with title, author, language, etc and</li>
 <li>“gutenberg_authors” that shows information about each author, such as aliases and birth/death year.</li>
@@ -151,24 +151,22 @@ package_check(c(&quot;dplyr&quot;,&quot;ggplot2&quot;,&quot;gutenbergr&quot;,&qu
 <h1>My textual data:</h1>
 <p>-Alice’s adventure in wonderland is a fantasy novel written by Lewis Carroll, narrating the story of little “Alice” who fells through the rabbit hole into a fantasy world. The book has total 13 chapters and I am trying to analyze the change of emotions throughout the book as alice expererienced different adventures in her wonderland!</p>
 <p>-Finally, I will compare this book with the books of my other team members (Picture of Dorian Gray choosen by Catrina; and Quran, Bible and The Essence of Buddhism choosen by Ze) to see the variation of sentiments in different genre books</p>
-<ul>
-<li>The 5 downloaded books are saved in a list <code>booklist.rda</code> in the <code>data_SS</code> folder.</li>
-</ul>
+<p>The following function will download the books and save in a list <code>booklist.rda</code> in the <code>data_SS</code> folder</p>
 <pre class="r"><code>get_book &lt;- function(bookID){
   #Create directory, if it already exists then dont show warnings.
   # This eliminates the need for setwd
   # running my code will create these files whereever you store this data in
-  dir.create(&quot;data_SS/&quot;, showWarnings = FALSE)
+  dir.create(&quot;sadia/data_SS/&quot;, showWarnings = FALSE)
   
   booklist &lt;- list() #list of dataframes that will contain all the 5 books
   for (i in 1:length(bookID)){
     booklist[[i]] &lt;- gutenberg_download(bookID[i]) #download one by one and save in the list
-    save(booklist, file=&quot;data_SS/booklist.rda&quot;)
+    save(booklist, file=&quot;sadia/data_SS/booklist.rda&quot;)
   }
   # print(booklist) debug print
 }
 get_book(bookID)</code></pre>
-<p>We can take the <code>.rda</code> file and look at the structure of the list:</p>
+<p>Here are the book ids to download 5 books that will be analyzed by our team:</p>
 <pre class="r"><code>bookID &lt;-c(751, 174, 2800, 10, 18223)
 # 751: Alice's Adventure in Wonderland (I will analyze this book)
 # 174: Picture of Dorian Gray (Cat will analyze this book)
@@ -176,6 +174,7 @@ get_book(bookID)</code></pre>
 # 10: Bible (Ze will analyze this books)
 # 18223: The Essence of Buddhism (Ze will analyze this books)
 get_book(bookID)</code></pre>
+<p>We can see the structure of the booklist by taking the <code>.rda</code> file:</p>
 <pre class="r"><code>load(&quot;data_SS/booklist.rda&quot;)
 str(booklist) #We can then see that what we have a list of 5 books with the texts of each book in a dataframe</code></pre>
 <pre><code>## List of 5
@@ -194,15 +193,15 @@ str(booklist) #We can then see that what we have a list of 5 books with the text
 ##  $ :Classes 'tbl_df', 'tbl' and 'data.frame':    2295 obs. of  2 variables:
 ##   ..$ gutenberg_id: int [1:2295] 18223 18223 18223 18223 18223 18223 18223 18223 18223 18223 ...
 ##   ..$ text        : chr [1:2295] &quot;                    TEN CENT POCKET SERIES NO. 325&quot; &quot;&quot; &quot;                     Edited by E. Haldeman-Julius&quot; &quot;&quot; ...</code></pre>
-<p>Our next goal is to clean the books (removing spaces, punctuations, arranging by chapter) and to create a data frame of all books <code>tidy_books.rda</code>:</p>
+<p>As the next step, we have cleaned the books (removing spaces, punctuations, arranging by chapter) and created a data frame of all books <code>tidy_books.rda</code>:</p>
 <pre class="r"><code>clean_book &lt;- function(bookID){
-  load(&quot;data_SS/booklist.rda&quot;)
+  load(&quot;sadia/data_SS/booklist.rda&quot;)
   tidy_books &lt;- list()
   for (i in 1:length(bookID)){
     tidy_books[[i]] &lt;- booklist[[i]] %&gt;%mutate(linenumber = row_number(), chapter = cumsum(str_detect(text,regex(&quot;chapter|CHAPTER[\\divxlc]&quot;, 
                     ignore_case = TRUE)))) %&gt;% unnest_tokens(word, text)
      }
-  save(tidy_books, file = &quot;data_SS/tidy_books.Rda&quot;)
+  save(tidy_books, file = &quot;sadia/data_SS/tidy_books.Rda&quot;)
   #print( str(tidy_books)) #debug print
 }
 
